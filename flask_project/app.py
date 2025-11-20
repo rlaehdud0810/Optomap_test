@@ -7,6 +7,7 @@ app.secret_key = 'replace-this-with-a-secure-random-string'
 
 DATA_FILE = 'users.json'
 
+# ----------------- 데이터 처리 -----------------
 def load_data():
     if not os.path.exists(DATA_FILE):
         data = {"users": {}, "admin": {"id":"admin", "pw":generate_password_hash("admin")}}
@@ -19,6 +20,7 @@ def save_data(data):
     with open(DATA_FILE, 'w') as f:
         json.dump(data, f, indent=2)
 
+# ----------------- 통계 계산 -----------------
 def calculate_metrics(results):
     diag_set = set(v['true'] for v in results)
     metrics = {}
@@ -38,11 +40,26 @@ def calculate_metrics(results):
         }
     return metrics
 
+# ----------------- Quiz 문제 -----------------
 questions = [
-    {"images":["images/1a.jpg","images/1b.jpg","images/1c.jpg"],"true":"Normal"},
-    {"images":["images/2a.jpg","images/2b.jpg"],"true":"Glaucoma"}
+    {
+        "images": [
+            "images/1a.jpg",
+            "images/1b.jpg",
+            "images/1c.jpg"
+        ],
+        "true": "Normal"
+    },
+    {
+        "images": [
+            "images/2a.jpg",
+            "images/2b.jpg"
+        ],
+        "true": "Glaucoma"
+    }
 ]
 
+# ----------------- Routes -----------------
 @app.route('/')
 def home():
     return redirect(url_for('login'))
@@ -98,6 +115,7 @@ def quiz():
 
     q_index = session['q_index']
 
+    # 모든 문제 완료
     if q_index >= len(questions):
         data = load_data()
         data['users'][session['uid']]['results'].append(session['answers'].copy())
@@ -164,5 +182,7 @@ def delete_user(uid):
         save_data(data)
     return redirect(url_for('admin'))
 
+# ----------------- Render 포트 대응 -----------------
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
